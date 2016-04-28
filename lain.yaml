@@ -1,7 +1,7 @@
 appname: hedwig
 
 build:
-  base: laincloud/centos:20160428
+  base: laincloud/centos-lain:20160428
   prepare:
     version: 20160331
     script:
