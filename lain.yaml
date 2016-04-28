@@ -1,0 +1,94 @@
+appname: hedwig
+
+build:
+  base: laincloud/centos:20160428
+  prepare:
+    version: 20160331
+    script:
+      - yum install -y grafana-2.6.0
+      - pip install carbon==0.9.15 whisper==0.9.15
+      - yum install -y cairo-devel libffi-devel
+      - pip install graphite-api==1.1.2 gunicorn supervisor
+      - yum install -y nginx
+      - yum clean all
+      - GOPATH=/tmp go get github.com/Vimeo/statsdaemon/statsdaemon
+      - install -Dsm755 /tmp/bin/statsdaemon /usr/bin/statsdaemon
+      - rm -rf /tmp/{bin,pkg,src}
+  script:
+    - cp /opt/graphite/conf/carbon.conf{.example,}
+    - cp /lain/app/storage-schemas.conf /opt/graphite/conf/storage-schemas.conf
+    - cp /lain/app/graphite-api.yaml /etc/graphite-api.yaml
+    - cp /lain/app/web/nginx.conf /etc/nginx/nginx.conf
+
+
+web.grafana:
+  port: 3000
+  https_only: true
+  memory: 128M
+  env:
+    - GRAFANA_HOME=/usr/share/grafana
+    - LOG_DIR=/var/log/grafana
+    - DATA_DIR=/var/lib/grafana
+    - CONF_DIR=/etc/grafana
+    - CONF_FILE=/etc/grafana/grafana.ini
+  workdir: /usr/share/grafana
+  cmd: >
+    /usr/sbin/grafana-server
+    --config=${CONF_FILE}
+    cfg:default.paths.logs=${LOG_DIR}
+    cfg:default.paths.data=${DATA_DIR}
+  mountpoint:
+    - hedwig-grafana.lain.local
+  persistent_dirs:
+    - /var/lib/grafana/:
+        backup_full:
+          schedule: "0 23 * * *"
+          expire: "10d"
+    - /var/log/grafana/
+
+
+worker.carbon:
+  #port: 2003, 2004, 7002 ¯\_(ツ)_/¯
+  port: 2003
+  memory: 64M
+  cmd: supervisord -c /lain/app/supervisord-carbon.conf
+  persistent_dirs:
+    - /opt/graphite/storage/:
+        backup_increment:
+          schedule: "0 23 * * *"
+          expire: "10d"
+    #- /opt/graphite/conf/
+
+
+worker.statsdaemon:
+  #port: 8125, 8126
+  memory: 64M
+  cmd: statsdaemon -config_file=/lain/app/statsdaemon.ini
+
+
+web.icinga:
+  image: laincloud/icinga:20160331
+  memory: 256M
+  cmd: supervisord
+  mountpoint:
+    - hedwig-icinga.lain.local
+  https_only: true
+  persistent_dirs:
+     - /var/lib/icinga2
+  #  - /etc/icinga2/
+  #  - /etc/icingaweb2/
+  logs:
+    - icingaweb2.log
+
+
+web.web:
+  port: 80
+  memory: 256M
+  cmd: supervisord -c /lain/app/supervisord-web.conf
+  mountpoint:
+    - hedwig-web.lain.local
+
+
+use_services:
+  mysql-service:
+    - mysql-master
