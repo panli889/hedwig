@@ -50,7 +50,7 @@ web.grafana:
 worker.carbon:
   #port: 2003, 2004, 7002 ¯\_(ツ)_/¯
   port: 2003
-  memory: 64M
+  memory: 256M
   cmd: supervisord -c /lain/app/supervisord-carbon.conf
   persistent_dirs:
     - /opt/graphite/storage/:
