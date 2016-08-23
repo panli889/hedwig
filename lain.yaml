@@ -66,29 +66,6 @@ worker.statsdaemon:
   cmd: statsdaemon -config_file=/lain/app/statsdaemon.ini
 
 
-web.icinga:
-  image: laincloud/icinga2:20160804
-  memory: 256M
-  cmd: supervisord
-  mountpoint:
-    - hedwig-icinga.lain.local
-  https_only: true
-  persistent_dirs:
-     - /var/lib/icinga2
-  #  - /etc/icinga2/
-  #  - /etc/icingaweb2/
-  logs:
-    - icingaweb2.log
-
-
-web.web:
-  port: 80
-  memory: 256M
-  cmd: supervisord -c /lain/app/supervisord-web.conf
-  mountpoint:
-    - hedwig-web.lain.local
-
-
 use_services:
   mysql-service:
     - mysql-master
