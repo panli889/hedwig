@@ -3,7 +3,7 @@ appname: hedwig
 build:
   base: laincloud/centos-lain:20160503
   prepare:
-    version: 20160331
+    version: 20160913
     script:
       - yum install -y https://grafanarel.s3.amazonaws.com/builds/grafana-2.6.0-1.x86_64.rpm
       - pip install carbon==0.9.15 whisper==0.9.15
