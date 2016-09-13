@@ -47,25 +47,6 @@ web.grafana:
     - /var/log/grafana/
 
 
-worker.carbon:
-  #port: 2003, 2004, 7002 ¯\_(ツ)_/¯
-  port: 2003
-  memory: 256M
-  cmd: supervisord -c /lain/app/supervisord-carbon.conf
-  persistent_dirs:
-    - /opt/graphite/storage/:
-        backup_increment:
-          schedule: "0 23 * * *"
-          expire: "10d"
-    #- /opt/graphite/conf/
-
-
-worker.statsdaemon:
-  #port: 8125, 8126
-  memory: 64M
-  cmd: statsdaemon -config_file=/lain/app/statsdaemon.ini
-
-
 use_services:
   mysql-service:
     - mysql-master
